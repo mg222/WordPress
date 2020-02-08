@@ -7,12 +7,12 @@
  */
 
 /** Load WordPress Administration Bootstrap */
-require_once( dirname( __FILE__ ) . '/admin.php' );
+require_once __DIR__ . '/admin.php';
 
 /**
  * @global string  $post_type
  * @global object  $post_type_object
- * @global WP_Post $post
+ * @global WP_Post $post             Global post object.
  */
 global $post_type, $post_type_object, $post;
 
@@ -39,10 +39,10 @@ if ( 'post' == $post_type ) {
 		// What if there isn't a post-new.php item for this post type?
 		if ( ! isset( $_registered_pages[ get_plugin_page_hookname( "post-new.php?post_type=$post_type", $post_type_object->show_in_menu ) ] ) ) {
 			if ( isset( $_registered_pages[ get_plugin_page_hookname( "edit.php?post_type=$post_type", $post_type_object->show_in_menu ) ] ) ) {
-				// Fall back to edit.php for that post type, if it exists
+				// Fall back to edit.php for that post type, if it exists.
 				$submenu_file = "edit.php?post_type=$post_type";
 			} else {
-				// Otherwise, give up and highlight the parent
+				// Otherwise, give up and highlight the parent.
 				$submenu_file = $parent_file;
 			}
 		}
@@ -68,8 +68,16 @@ $post_ID = $post->ID;
 
 /** This filter is documented in wp-admin/post.php */
 if ( apply_filters( 'replace_editor', false, $post ) !== true ) {
-	wp_enqueue_script( 'autosave' );
-	include( ABSPATH . 'wp-admin/edit-form-advanced.php' );
+	if ( use_block_editor_for_post( $post ) ) {
+		require ABSPATH . 'wp-admin/edit-form-blocks.php';
+	} else {
+		wp_enqueue_script( 'autosave' );
+		require ABSPATH . 'wp-admin/edit-form-advanced.php';
+	}
+} else {
+	// Flag that we're not loading the block editor.
+	$current_screen = get_current_screen();
+	$current_screen->is_block_editor( false );
 }
 
-include( ABSPATH . 'wp-admin/admin-footer.php' );
+require_once ABSPATH . 'wp-admin/admin-footer.php';
